@@ -15,7 +15,6 @@ public class RedLightManager : MonoBehaviour
     public int coin = 0;
     public int playerCounters = 15;
     public UIEnd endPanel;
-    public ParticleSystem fxWin;
 
     [Header("UI")]
     public GameObject joystick;

@@ -91,7 +91,6 @@ public class PlayerController : MonoBehaviour
             SFX.instance.PlayWin();
             transform.DORotate(new Vector3(0, 180, 0), 0.5f);
             transform.GetChild(0).DORotate(new Vector3(0, 0, 0), 0.5f);
-            RedLightManager.instance.fxWin.Play();
             StartCoroutine(Win());
             
         }
