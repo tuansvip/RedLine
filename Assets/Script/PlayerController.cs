@@ -1,8 +1,11 @@
 using DG.Tweening;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Jobs.LowLevel.Unsafe;
+using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class PlayerController : MonoBehaviour
 {
@@ -14,36 +17,32 @@ public class PlayerController : MonoBehaviour
     public bool win = false;
     public bool lose = false;
     public Rigidbody rb;
-    public float speeder;
-    public GameObject joystick;
+    public GameObject joystick, shield;
     public RectTransform joystickBack;
     public RectTransform joystickHandle;
+    public bool hasShield;
     Animator anim;
+    public Transform centerPoint;
+    public float joystickmag;
 
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
         anim = GetComponent<Animator>();
-        joystick.GetComponent<RectTransform>().anchorMax = Vector2.zero;
-        joystick.GetComponent<RectTransform>().anchorMin = Vector2.zero;
     }
 
     private void Update()
     {
         if (win || lose) return;
-        if (!isMoving && RedLightManager.instance.started)
-        {
-            standTimer += Time.deltaTime;
-        }
-        if (standTimer > 15 || RedLightManager.instance.timer <= 0)
+        if ( RedLineManager.instance.timer <= 0)
         {
             lose = true;
             StartCoroutine(Lose());
         }
-        if (Input.touchCount > 0)
+
+/*        if (Input.touchCount > 0)
         {
-            standTimer = 0;
             Touch touch = Input.GetTouch(0);
             switch (touch.phase)
             {
@@ -52,7 +51,7 @@ public class PlayerController : MonoBehaviour
                     isMoving = true;
                     break;
                 case TouchPhase.Moved:
-                    if ((joystickHandle.position - touchPos).magnitude> 70 )
+                    if ((joystickHandle.position - touchPos).magnitude > 70)
                     {
                         direction.x = (joystickHandle.position - touchPos).x;
                         direction.y = (joystickHandle.position - touchPos).y;
@@ -64,19 +63,29 @@ public class PlayerController : MonoBehaviour
                     direction = Vector2.up;
                     break;
             }
-        }
+        }*/
+
+        rb.interpolation = RigidbodyInterpolation.Interpolate;
     }
+
+
     private void FixedUpdate()
     {
-        if (lose || win || !RedLightManager.instance.started) return;
-        speeder = rb.velocity.magnitude;
-        if (isMoving && !win)
+        if (lose || win || !RedLineManager.instance.started) return;
+        joystickmag = joystick.GetComponent<FloatingJoystick>().Direction.magnitude;
+        if (joystick.transform.GetChild(0).gameObject.active && !win)
         {
-            if (speeder < 1.5f)
+            if (joystickmag > 0.3f)
             {
-                rb.AddForce(new Vector3(direction.x, 0, direction.y) * speed, ForceMode.Force);
+                touchPos = joystickBack.position;
+
+                direction = joystick.GetComponent<FloatingJoystick>().Direction;
             }
-            
+            else
+            {
+                direction = Vector2.up;
+            }
+            rb.velocity = (new Vector3(direction.x, 0, direction.y)).normalized * speed;            
         }
 
     }
@@ -84,13 +93,15 @@ public class PlayerController : MonoBehaviour
     {
         if (other.CompareTag("RedLine"))
         {
+            Debug.Log("cc");
             win = true;
-            RedLightManager.instance.paused = true;
+            RedLineManager.instance.paused = true;
             Debug.Log("You win");
             anim.Play("Win");
+            SFX.instance.StopAll();
             SFX.instance.PlayWin();
             transform.DORotate(new Vector3(0, 180, 0), 0.5f);
-            transform.GetChild(0).DORotate(new Vector3(0, 0, 0), 0.5f);
+            StopAllCoroutines();
             StartCoroutine(Win());
             
         }
@@ -98,27 +109,37 @@ public class PlayerController : MonoBehaviour
     public IEnumerator Win()
     {
         yield return new WaitForSeconds(3f);
-        RedLightManager.instance.endPanel.ShowPanel(true);
+        RedLineManager.instance.endPanel.ShowPanel(true);
+        
     }
     public IEnumerator Lose()
     {
-        if (win) yield break;
         lose = true;
         anim.Play("Shot");
+        if (Random.Range(0, 2) == 1) RedLineManager.instance.guard1.Play("Shot"); else RedLineManager.instance.guard2.Play("Shot");
         if (Random.Range(0, 2) == 1) SFX.instance.PlayShot1(); else SFX.instance.PlayShot2();
         yield return new WaitForSeconds(0.5f);
-        RedLightManager.instance.playerCounters--;
+        RedLineManager.instance.playerCounters--;
         SFX.instance.PlayMaleScream();
-        yield return new WaitForSeconds(3);
-        SFX.instance.PlayLose();
-        RedLightManager.instance.joystick.SetActive(false);
-        RedLightManager.instance.gameplayPanel.SetActive(false);
-        RedLightManager.instance.losePanel.GetComponent<RectTransform>()
-            .DOMoveY(GameObject.Find("Center").GetComponent<RectTransform>().position.y, 0.5f)
-            .OnComplete(() =>
-            {
-                RedLightManager.instance.paused = true;
-                Time.timeScale = 0;
-            });
+        if (!win)
+        {
+            yield return new WaitForSeconds(3);
+            SFX.instance.StopAll();
+            SFX.instance.PlayLose();
+            RedLineManager.instance.joystick.SetActive(false);
+            RedLineManager.instance.gameplayPanel.SetActive(false);
+            RedLineManager.instance.losePanel.transform
+                .DOMoveY(centerPoint.position.y, 0.5f)
+                .OnComplete(() =>
+                {
+                    RedLineManager.instance.paused = true;
+                    Time.timeScale = 0;
+                    DOTween.KillAll();
+                });
+        }
+    }
+    public void ShieldRotate()
+    {
+        shield.transform.DORotate(new Vector3(0, 360, 0), 1f, RotateMode.FastBeyond360).SetEase(Ease.Linear).OnComplete(() => ShieldRotate());
     }
 }

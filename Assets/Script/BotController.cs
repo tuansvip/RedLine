@@ -29,13 +29,17 @@ public class BotController : MonoBehaviour
         dir.Normalize();
         speed = Random.Range(12, 20);
         isMoving = true;
-        float timeToMove = 5 / RedLightManager.instance.enemy.a;
+        float timeToMove = 5 / RedLineManager.instance.enemy.a;
         yield return new WaitForSeconds(Random.Range(timeToMove - 1, timeToMove));
         isMoving = false;
     }
+    private void Update()
+    {
+        rb.interpolation = RigidbodyInterpolation.Interpolate;
+    }
     private void FixedUpdate()
     {
-        if (RedLightManager.instance.paused || die || win) return;
+        if (RedLineManager.instance.paused || die || win) return;
         if (isMoving)
         {
             if (rb.velocity.magnitude < 1.8f)
@@ -44,8 +48,9 @@ public class BotController : MonoBehaviour
     }
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("RedLine"))
+        if (other.CompareTag("RedLine") && !die)
         {
+           
             win = true;
             Debug.Log("Bot win");
             transform.DORotate(new Vector3(0, 180, 0), 0.5f);
@@ -56,14 +61,15 @@ public class BotController : MonoBehaviour
     public IEnumerator Died()
     {
         if (!win)
+        yield return new WaitForSeconds(Random.Range(0.2f,1f));
         {
-            yield return new WaitForSeconds(Random.Range(0.2f,1f));
             if (Random.Range(0, 2) == 1) SFX.instance.PlayShot1(); else SFX.instance.PlayShot2();
             yield return new WaitForSeconds(0.5f);
-            RedLightManager.instance.playerCounters--;
+            RedLineManager.instance.playerCounters--;
             if (gender == Gender.Male)  SFX.instance.PlayMaleScream(); else SFX.instance.PlayFemaleScream();
             Animator anim = GetComponent<Animator>();
             anim.Play("Shot");
+            if (Random.Range(0, 2) == 1) RedLineManager.instance.guard1.Play("Shot"); else RedLineManager.instance.guard2.Play("Shot");
             yield return new WaitForSeconds(3);
             Destroy(gameObject);
         }

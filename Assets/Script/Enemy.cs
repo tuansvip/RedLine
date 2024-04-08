@@ -11,60 +11,66 @@ public class Enemy : MonoBehaviour
     public bool Scanning = false;
     public float scanTime;
     public float a = 1;
-
     private void Update()
     {
-        if (RedLightManager.instance.paused || !RedLightManager.instance.started || RedLightManager.instance.timer <=0 || RedLightManager.instance.player.win) return;
+        if (RedLineManager.instance.paused || !RedLineManager.instance.started || RedLineManager.instance.timer <=0 || RedLineManager.instance.player.win) return;
         if (!Scanning && !SFX.instance.enemy.isPlaying)
         {
             Scanning = true;
 
             StartCoroutine(Scan());
-
         }
         if (Scanning)
         {
             //Scan event
-            if (RedLightManager.instance.player.rb.velocity.magnitude > 0.3f && !RedLightManager.instance.player.lose)
+            if (RedLineManager.instance.player.rb.velocity.magnitude > 0.3f && !RedLineManager.instance.player.win && !RedLineManager.instance.player.lose && !RedLineManager.instance.player.hasShield)
             {
-                StartCoroutine(RedLightManager.instance.player.Lose());
+                StartCoroutine(RedLineManager.instance.player.Lose());
             }
-            foreach (GameObject bot in GameObject.FindGameObjectsWithTag("Bot"))
+            foreach (BotController bot in RedLineManager.instance.botCon.GetComponentsInChildren<BotController>())
             {
-                if (bot.GetComponent<BotController>().rb.velocity.magnitude > 0.3f && !bot.GetComponent<BotController>().die  && !bot.GetComponent<BotController>().win)
+                if (bot.rb.velocity.magnitude > 0.3f && !bot.die  && !bot.win)
                 {
-                    bot.GetComponent<BotController>().die = true;
-                    StartCoroutine(bot.GetComponent<BotController>().Died());
+                    bot.die = true;
+                    StartCoroutine(bot.Died());
                 }
             }
         }
+        
     }
 
     public IEnumerator Scan()
     {
-        if (RedLightManager.instance.timer > 0)
+        if (RedLineManager.instance.timer > 0)
         {
             transform.DORotate(new Vector3(0, 180, 0), 1);
+            SFX.instance.PlayEnemRotate();
             if (a < 2)
             {
                 a += 0.2f;
            
             }
-            RedLightManager.instance.green.SetActive(false);
-            RedLightManager.instance.red.SetActive(true);
-            yield return new WaitForSeconds(scanTime/a - 1); 
-            transform.DORotate(new Vector3(0, 1, 0), 1).OnComplete(() =>
+            RedLineManager.instance.green.SetActive(false);
+            RedLineManager.instance.red.SetActive(true);
+            Debug.LogWarning("Scanning");
+            RedLineManager.instance.guard1.Play("Aim");
+            RedLineManager.instance.guard2.Play("Aim");
+            yield return new WaitForSeconds(scanTime/a - 1);
+            SFX.instance.enemy.pitch = a;
+            SFX.instance.PlayEnemy();
+            Scanning = false;
+            RedLineManager.instance.green.SetActive(true);
+            RedLineManager.instance.red.SetActive(false);
+            RedLineManager.instance.guard1.Play("Idle");
+            RedLineManager.instance.guard2.Play("Idle");
+            foreach (GameObject bot in GameObject.FindGameObjectsWithTag("Bot"))
             {
-                SFX.instance.enemy.pitch = a;
-                SFX.instance.PlayEnemy();
-                Scanning = false;
-                RedLightManager.instance.green.SetActive(true);
-                RedLightManager.instance.red.SetActive(false);
-                foreach (GameObject bot in GameObject.FindGameObjectsWithTag("Bot"))
-                {
-                    StartCoroutine(bot.GetComponent<BotController>().Move());
-                }
-            });
+                StartCoroutine(bot.GetComponent<BotController>().Move());
+            }
+            SFX.instance.PlayEnemRotate();
+
+            transform.DORotate(new Vector3(0, 1, 0), 1);
+
         }
     }
 }

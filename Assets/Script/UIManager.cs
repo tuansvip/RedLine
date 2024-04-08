@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
 {
@@ -24,10 +25,10 @@ public class UIManager : MonoBehaviour
         switch (currentState)
         {
             case UIState.Timer:
-                GetComponent<TextMeshPro>().text = RedLightManager.instance.timer.ToString("F1");
+                GetComponent<Text>().text = RedLineManager.instance.timer.ToString("F1");
                 break;
             case UIState.PlayerCounters:
-                GetComponent<TextMeshProUGUI>().text = RedLightManager.instance.playerCounters + " players remaining";
+                GetComponent<TextMeshProUGUI>().text = RedLineManager.instance.playerCounters + "/15";
                 break;
         }
     }

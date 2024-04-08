@@ -15,6 +15,7 @@ public class SFX : MonoBehaviour
     public AudioSource shot2;
     public AudioSource femaleScream;
     public AudioSource maleScream;
+    public AudioSource enemRotate;
 
 
 
@@ -105,6 +106,15 @@ public class SFX : MonoBehaviour
     {
         maleScream.Stop();
     }
+    public void PlayEnemRotate()
+    {
+        enemRotate.Play();
+    }
+    public void StopEnemRotate()
+    {
+        enemRotate.Stop();
+    }
+
 
     public void MuteAll()
     {
@@ -117,6 +127,7 @@ public class SFX : MonoBehaviour
         shot1.mute = true;
         shot2.mute = true;
         femaleScream.mute = true;
+        enemRotate.mute = true;
     }
     public void UnmuteAll()
     {
@@ -129,5 +140,20 @@ public class SFX : MonoBehaviour
         shot1.mute = false;
         shot2.mute = false;
         femaleScream.mute = false;
+        enemRotate.mute = false;
+    }
+
+    public void StopAll()
+    {
+        bg.Stop();
+        click.Stop();
+        win.Stop();
+        lose.Stop();
+        enemy.Stop();
+        firework.Stop();
+        shot1.Stop();
+        shot2.Stop();
+        femaleScream.Stop();
+        enemRotate.Stop();
     }
 }

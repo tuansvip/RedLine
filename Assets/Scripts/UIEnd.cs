@@ -1,8 +1,8 @@
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 
 public class UIEnd : MonoBehaviour
@@ -77,11 +77,14 @@ public class UIEnd : MonoBehaviour
 
     public void NextOrRestart()
     {
+        
         if (buttonReward.GetComponent<Button>().interactable == true)
         {
             Player.coin += 100;
         }
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        Time.timeScale = 1;
+        DOTween.KillAll();
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     public void ShowPanel(bool isWin)
@@ -105,6 +108,7 @@ public class UIEnd : MonoBehaviour
         var rectPanel = panelEndGame.GetComponent<RectTransform>();
         FadeObj(rectPanel, 1f, 0.5f);
         rectPanel.DOAnchorPosY(0, 0.5f);
+        
     }
 
     public void FadeObj(RectTransform parent, float alpha, float duration)
