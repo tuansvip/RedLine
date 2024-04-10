@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-
+using phamtuan;
 [CustomEditor(typeof(FloatingJoystick))]
 public class FloatingJoystickEditor : JoystickEditor
 {
