@@ -26,6 +26,7 @@ namespace phamtuan
         Animator anim;
         public Transform centerPoint;
         public float joystickmag;
+        public float velo;
 
 
         private void Awake()
@@ -42,7 +43,7 @@ namespace phamtuan
                 lose = true;
                 StartCoroutine(Lose());
             }
-
+            velo = rb.velocity.magnitude;
     /*        if (Input.touchCount > 0)
             {
                 Touch touch = Input.GetTouch(0);
@@ -88,6 +89,9 @@ namespace phamtuan
                     direction = Vector2.up;
                 }
                 rb.velocity = (new Vector3(direction.x, 0, direction.y)).normalized * speed;            
+            } else if (!joystick.transform.GetChild(0).gameObject.activeInHierarchy)
+            {
+                rb.velocity = Vector3.zero;
             }
 
         }
@@ -133,6 +137,7 @@ namespace phamtuan
                 SFX.instance.PlayLose();
                 RedLineManager.instance.joystick.SetActive(false);
                 RedLineManager.instance.gameplayPanel.SetActive(false);
+                RedLineManager.instance.x2SpeedBtn.SetActive(false);
                 RedLineManager.instance.losePanel.transform
                     .DOMoveY(centerPoint.position.y, 0.5f)
                     .OnComplete(() =>

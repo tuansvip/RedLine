@@ -18,27 +18,28 @@ namespace phamtuan
             if (RedLineManager.instance.paused || !RedLineManager.instance.started || RedLineManager.instance.timer <=0 || RedLineManager.instance.player.win) return;
             if (!Scanning && !SFX.instance.enemy.isPlaying)
             {
-                Scanning = true;
 
                 StartCoroutine(Scan());
-            }
+            }       
+        }
+        private void LateUpdate()
+        {
             if (Scanning)
             {
-                //Scan event
-                if (RedLineManager.instance.player.rb.velocity.magnitude > 0.3f && !RedLineManager.instance.player.win)
+                //Scan even
+                if (RedLineManager.instance.player.rb.velocity.magnitude > 0.3f && !RedLineManager.instance.player.win && !RedLineManager.instance.player.lose)
                 {
                     StartCoroutine(RedLineManager.instance.player.Lose());
                 }
                 foreach (BotController bot in RedLineManager.instance.botCon.GetComponentsInChildren<BotController>())
                 {
-                    if (bot.rb.velocity.magnitude > 0.3f && !bot.die  && !bot.win)
+                    if (bot.rb.velocity.magnitude > 0.3f && !bot.die && !bot.win)
                     {
                         bot.die = true;
                         StartCoroutine(bot.Died());
                     }
                 }
             }
-        
         }
 
         public IEnumerator Scan()
@@ -57,10 +58,11 @@ namespace phamtuan
                 Debug.LogWarning("Scanning");
                 RedLineManager.instance.guard1.Play("Aim");
                 RedLineManager.instance.guard2.Play("Aim");
+                Scanning = true;
                 yield return new WaitForSeconds(scanTime/a - 1);
+                Scanning = false;
                 SFX.instance.enemy.pitch = a;
                 SFX.instance.PlayEnemy();
-                Scanning = false;
                 RedLineManager.instance.green.SetActive(true);
                 RedLineManager.instance.red.SetActive(false);
                 RedLineManager.instance.guard1.Play("Idle");
